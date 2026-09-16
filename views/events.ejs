@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head><%- include('partials/layout-head', { pageTitle: 'Udalosti' }) %></head>
+<body>
+<div class="app-wrapper">
+  <%- include('partials/sidebar') %>
+  <div class="main-content">
+    <%- include('partials/topbar') %>
+    <div class="content-area">
+
+      <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+      <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+      <div style="display:grid;grid-template-columns:<%= (user.role !== 'student') ? '1fr 340px' : '1fr' %>;gap:20px;align-items:start">
+
+        <div>
+          <div class="page-header"><h1 class="page-title">Nadchazejici udalosti</h1></div>
+
+          <% if (events && events.length > 0) { %>
+            <% events.forEach(function(ev) { %>
+              <% const d = new Date(ev.event_date + 'T00:00:00'); %>
+              <div class="card" style="margin-bottom:12px">
+                <div style="display:flex;gap:16px;align-items:flex-start">
+                  <div class="event-date-badge" style="flex-shrink:0">
+                    <div class="event-date-day"><%= d.getDate() %></div>
+                    <div class="event-date-month"><%= d.toLocaleDateString('cs-CZ',{month:'short'}) %></div>
+                    <div style="font-size:9px;opacity:.8"><%= d.getFullYear() %></div>
+                  </div>
+                  <div style="flex:1">
+                    <div style="font-size:16px;font-weight:700;color:var(--text-primary)"><%= ev.title %></div>
+                    <div style="display:flex;gap:16px;margin:4px 0;font-size:12px;color:var(--text-muted)">
+                      <% if (ev.event_time) { %><span><%= ev.event_time %></span><% } %>
+                      <% if (ev.location) { %><span><%= ev.location %></span><% } %>
+                      <% if (ev.creator_name) { %><span>Pridal: <%= ev.creator_name %></span><% } %>
+                    </div>
+                    <% if (ev.description) { %><div style="font-size:13px;color:var(--text-primary);margin-top:6px"><%= ev.description %></div><% } %>
+                  </div>
+                  <% if (user.role === 'admin' || (user.role === 'teacher' && ev.created_by === user.id)) { %>
+                    <form method="POST" action="/udalosti/<%= ev.id %>/delete" onsubmit="return confirm('Smazat udalost?')" style="flex-shrink:0">
+                      <button type="submit" class="btn btn-danger btn-sm">Smazat</button>
+                    </form>
+                  <% } %>
+                </div>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <div class="card"><div class="no-events">Nejsou napanovane zadne udalosti</div></div>
+          <% } %>
+
+          <% if (pastEvents && pastEvents.length > 0) { %>
+            <h2 class="page-title" style="font-size:18px;margin:24px 0 12px">Minule udalosti</h2>
+            <% pastEvents.forEach(function(ev) { %>
+              <% const d = new Date(ev.event_date + 'T00:00:00'); %>
+              <div class="card" style="margin-bottom:8px;opacity:0.65">
+                <div style="display:flex;gap:12px;align-items:center">
+                  <span style="font-size:13px;font-weight:600;color:var(--text-muted);min-width:80px"><%= d.toLocaleDateString('cs-CZ') %></span>
+                  <span style="font-size:14px;font-weight:600"><%= ev.title %></span>
+                  <% if (ev.location) { %><span style="font-size:12px;color:var(--text-muted)"><%= ev.location %></span><% } %>
+                </div>
+              </div>
+            <% }); %>
+          <% } %>
+        </div>
+
+        <!-- Create event form -->
+        <% if (user.role !== 'student') { %>
+        <div class="card" style="position:sticky;top:24px">
+          <h2 class="card-title" style="font-size:17px;margin-bottom:14px">Nova udalost</h2>
+          <form method="POST" action="/udalosti">
+            <div class="form-group">
+              <label class="form-label">Nazev</label>
+              <input class="form-control" type="text" name="title" maxlength="200" required placeholder="Napr. Skolni ples">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Popis (volitelne)</label>
+              <textarea class="form-control" name="description" rows="3" maxlength="500" placeholder="Popis udalosti..."></textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div class="form-group">
+                <label class="form-label">Datum</label>
+                <input class="form-control" type="date" name="event_date" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Cas</label>
+                <input class="form-control" type="time" name="event_time">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Misto (volitelne)</label>
+              <input class="form-control" type="text" name="location" maxlength="100" placeholder="Napr. Aula">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Pridat udalost</button>
+          </form>
+        </div>
+        <% } %>
+
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

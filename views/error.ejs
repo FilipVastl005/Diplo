@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head><%- include('partials/layout-head', { pageTitle: 'Chyba' }) %></head>
+<body>
+<div class="app-wrapper">
+  <% if (typeof user !== 'undefined' && user) { %>
+    <%- include('partials/sidebar') %>
+  <% } %>
+  <div class="main-content" style="<%= (!user) ? 'margin-left:0' : '' %>">
+    <% if (typeof user !== 'undefined' && user) { %>
+      <%- include('partials/topbar') %>
+    <% } %>
+    <div class="content-area" style="display:flex;align-items:center;justify-content:center;height:100%">
+      <div style="text-align:center">
+        <div style="font-size:80px;font-weight:900;color:var(--purple-200)"><%= error.status %></div>
+        <div style="font-size:20px;font-weight:600;color:var(--text-primary);margin-bottom:16px"><%= error.message %></div>
+        <% if (typeof user !== 'undefined' && user) { %>
+          <a href="/" class="btn btn-primary">Zpet na prehled</a>
+        <% } else { %>
+          <a href="/login" class="btn btn-primary">Prihlasit se</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

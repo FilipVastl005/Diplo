@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head><%- include('partials/layout-head', { pageTitle: 'Znamky' }) %></head>
+<body>
+<div class="app-wrapper">
+  <%- include('partials/sidebar') %>
+  <div class="main-content">
+    <%- include('partials/topbar') %>
+    <div class="content-area">
+
+      <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+      <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+      <div style="display:grid;grid-template-columns:<%= (user.role !== 'student') ? '1fr 340px' : '1fr' %>;gap:20px;align-items:start">
+
+        <!-- Grades section -->
+        <div>
+          <div class="page-header">
+            <h1 class="page-title">
+              Znamky
+              <% if (selectedStudent) { %><span style="font-size:16px;font-weight:500;color:var(--text-muted)"> - <%= selectedStudent.full_name %> (<%= selectedStudent.class_name %>)</span><% } %>
+            </h1>
+          </div>
+
+          <!-- Student selector for teachers/admins -->
+          <% if (user.role !== 'student') { %>
+          <div class="card" style="margin-bottom:16px;padding:14px">
+            <form method="GET" action="/znamky" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+              <div class="form-group" style="margin:0;flex:1;min-width:200px">
+                <label class="form-label">Vybrat studenta</label>
+                <select class="form-control" name="student_id" onchange="this.form.submit()">
+                  <option value="">-- Vyberte studenta --</option>
+                  <% students.forEach(function(s) { %>
+                    <option value="<%= s.id %>" <%= studentId === s.id ? 'selected' : '' %>><%= s.full_name %> (<%= s.class_name %>)</option>
+                  <% }); %>
+                </select>
+              </div>
+            </form>
+          </div>
+          <% } %>
+
+          <!-- Grade table by subject -->
+          <% if (gradesBySubject && gradesBySubject.length > 0) { %>
+            <% gradesBySubject.forEach(function(subj) { %>
+              <div class="card" style="margin-bottom:16px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                  <h3 style="font-size:16px;font-weight:700;color:var(--text-primary)"><%= subj.name %></h3>
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <span style="font-size:12px;color:var(--text-muted)">Prumer:</span>
+                    <span class="grade-badge grade-<%= Math.round(parseFloat(subj.avg)) %>" style="width:auto;padding:4px 12px;border-radius:20px"><%= subj.avg %></span>
+                  </div>
+                </div>
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Datum</th>
+                      <th>Znamka</th>
+                      <th>Vaha</th>
+                      <th>Popis</th>
+                      <th>Ucitel</th>
+                      <% if (user.role !== 'student') { %><th></th><% } %>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% subj.grades.forEach(function(g) { %>
+                      <tr>
+                        <td><%= new Date(g.date + 'T00:00:00').toLocaleDateString('cs-CZ') %></td>
+                        <td><span class="grade-badge grade-<%= g.grade %>"><%= g.grade %></span></td>
+                        <td><%= g.weight %></td>
+                        <td><%= g.description || '-' %></td>
+                        <td><%= g.teacher_name || '-' %></td>
+                        <% if (user.role !== 'student') { %>
+                        <td>
+                          <form method="POST" action="/znamky/<%= g.id %>/delete" onsubmit="return confirm('Smazat znamku?')">
+                            <button type="submit" class="btn btn-danger btn-sm">Smazat</button>
+                          </form>
+                        </td>
+                        <% } %>
+                      </tr>
+                    <% }); %>
+                  </tbody>
+                </table>
+              </div>
+            <% }); %>
+          <% } else if (user.role === 'student' || selectedStudent) { %>
+            <div class="card"><div class="empty-state">Zadne znamky k zobrazeni.</div></div>
+          <% } else { %>
+            <div class="card"><div class="empty-state">Vyberte studenta pro zobrazeni znamek.</div></div>
+          <% } %>
+        </div>
+
+        <!-- Add grade form (teacher/admin) -->
+        <% if (user.role !== 'student') { %>
+        <div class="card" style="position:sticky;top:24px">
+          <h2 class="card-title" style="font-size:17px;margin-bottom:14px">Pridat znamku</h2>
+          <form method="POST" action="/znamky/add">
+            <div class="form-group">
+              <label class="form-label">Student</label>
+              <select class="form-control" name="student_id" required>
+                <option value="">-- Vyberte --</option>
+                <% students.forEach(function(s) { %>
+                  <option value="<%= s.id %>" <%= studentId === s.id ? 'selected' : '' %>><%= s.full_name %> (<%= s.class_name %>)</option>
+                <% }); %>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Predmet</label>
+              <select class="form-control" name="subject_id" required>
+                <option value="">-- Vyberte --</option>
+                <% subjects.forEach(function(s) { %>
+                  <option value="<%= s.id %>"><%= s.name %><% if (s.teacher_name) { %> (<%= s.teacher_name %>)<% } %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div class="form-group">
+                <label class="form-label">Znamka (1-5)</label>
+                <select class="form-control" name="grade" required>
+                  <option value="1">1 - Vyborne</option>
+                  <option value="2">2 - Chvalitebne</option>
+                  <option value="3">3 - Dobre</option>
+                  <option value="4">4 - Dostatecne</option>
+                  <option value="5">5 - Nedostatecne</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Vaha</label>
+                <select class="form-control" name="weight">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Datum</label>
+              <input class="form-control" type="date" name="date" value="<%= new Date().toISOString().split('T')[0] %>">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Popis (volitelne)</label>
+              <input class="form-control" type="text" name="description" maxlength="200" placeholder="Napr. Pisemka, Test...">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Pridat znamku</button>
+          </form>
+        </div>
+        <% } %>
+
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

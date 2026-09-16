@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head><%- include('../partials/layout-head', { pageTitle: 'Predmety' }) %></head>
+<body>
+<div class="app-wrapper">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <div class="content-area">
+
+      <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+      <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start">
+
+        <div>
+          <div class="page-header"><h1 class="page-title">Predmety</h1></div>
+          <div class="card">
+            <table class="table">
+              <thead>
+                <tr><th>Nazev</th><th>Zkratka</th><th>Ucitel</th><th>Ucebna</th><th>Akce</th></tr>
+              </thead>
+              <tbody>
+                <% subjects.forEach(function(s) { %>
+                  <tr>
+                    <td style="font-weight:600"><%= s.name %></td>
+                    <td><span class="badge badge-student"><%= s.short_name %></span></td>
+                    <td><%= s.teacher_name || '-' %></td>
+                    <td><%= s.room || '-' %></td>
+                    <td>
+                      <div class="action-row">
+                        <button class="btn btn-secondary btn-sm" onclick="openEditSubject(<%= JSON.stringify({id:s.id,name:s.name,short_name:s.short_name,teacher_id:s.teacher_id||'',room:s.room||''}) %>)">Upravit</button>
+                        <form method="POST" action="/admin/subjects/<%= s.id %>/delete" onsubmit="return confirm('Smazat predmet <%= s.name %>?')">
+                          <button type="submit" class="btn btn-danger btn-sm">Smazat</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="position:sticky;top:24px">
+          <h2 class="card-title" style="font-size:17px;margin-bottom:14px">Novy predmet</h2>
+          <form method="POST" action="/admin/subjects/create">
+            <div class="form-group">
+              <label class="form-label">Nazev predmetu</label>
+              <input class="form-control" type="text" name="name" required maxlength="100" placeholder="napr. Matematika">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Zkratka (max 5 znaku)</label>
+              <input class="form-control" type="text" name="short_name" required maxlength="5" placeholder="napr. MAT">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ucitel</label>
+              <select class="form-control" name="teacher_id">
+                <option value="">-- Zadny --</option>
+                <% teachers.forEach(function(t) { %>
+                  <option value="<%= t.id %>"><%= t.full_name %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ucebna</label>
+              <input class="form-control" type="text" name="room" maxlength="20" placeholder="napr. A18">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Vytvorit predmet</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Edit subject modal -->
+      <div id="editSubjectModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center">
+        <div class="card" style="width:420px;position:relative">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h2 style="font-size:18px;font-weight:700">Upravit predmet</h2>
+            <button onclick="document.getElementById('editSubjectModal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted)">&times;</button>
+          </div>
+          <form method="POST" id="editSubjectForm">
+            <div class="form-group"><label class="form-label">Nazev</label><input class="form-control" type="text" name="name" id="esf_name" required maxlength="100"></div>
+            <div class="form-group"><label class="form-label">Zkratka</label><input class="form-control" type="text" name="short_name" id="esf_short" required maxlength="5"></div>
+            <div class="form-group">
+              <label class="form-label">Ucitel</label>
+              <select class="form-control" name="teacher_id" id="esf_teacher">
+                <option value="">-- Zadny --</option>
+                <% teachers.forEach(function(t) { %>
+                  <option value="<%= t.id %>"><%= t.full_name %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Ucebna</label><input class="form-control" type="text" name="room" id="esf_room" maxlength="20"></div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Ulozit</button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script>
+function openEditSubject(s) {
+  document.getElementById('esf_name').value = s.name;
+  document.getElementById('esf_short').value = s.short_name;
+  document.getElementById('esf_teacher').value = s.teacher_id || '';
+  document.getElementById('esf_room').value = s.room;
+  document.getElementById('editSubjectForm').action = '/admin/subjects/' + s.id + '/edit';
+  document.getElementById('editSubjectModal').style.display = 'flex';
+}
+</script>
+</body>
+</html>

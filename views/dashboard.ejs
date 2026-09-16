@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head><%- include('partials/layout-head', { pageTitle: 'Prehled' }) %></head>
+<body>
+<div class="app-wrapper">
+  <%- include('partials/sidebar') %>
+  <div class="main-content">
+    <%- include('partials/topbar') %>
+    <div class="content-area">
+
+      <div class="dashboard-grid">
+
+        <!-- Notifications Card -->
+        <div class="card notif-card">
+          <div class="card-header-row">
+            <h2 class="card-title">Notifikace</h2>
+            <a href="/notifikace" class="card-link">Vsechny</a>
+          </div>
+          <% if (notifications && notifications.length > 0) { %>
+            <% notifications.forEach(function(n) { %>
+              <div class="notif-item">
+                <div class="notif-author"><%= n.teacher_name || 'Systém' %></div>
+                <div class="notif-content"><%= n.content %></div>
+                <div class="notif-date"><%= new Date(n.created_at).toLocaleDateString('cs-CZ') %><% if (n.target_class) { %> &nbsp; Trida: <strong><%= n.target_class %></strong><% } %></div>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <div class="empty-state">Zadne notifikace</div>
+          <% } %>
+        </div>
+
+        <!-- Grades Card -->
+        <div class="card grades-card">
+          <div class="card-header-row">
+            <h2 class="card-title">Znamky</h2>
+            <a href="/znamky" class="card-link">Vsechny</a>
+          </div>
+          <% if (grades && grades.length > 0) { %>
+            <% grades.forEach(function(g) { %>
+              <div class="grade-row">
+                <span class="grade-subject">
+                  <%= g.subject_short %>
+                  <% if (g.student_name) { %>
+                    <span style="font-weight:400;color:var(--text-muted)">- <%= g.student_name %></span>
+                  <% } %>
+                </span>
+                <span class="grade-badge grade-<%= g.grade %>"><%= g.grade %></span>
+                <span class="grade-weight">Vaha: <%= g.weight %></span>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <div class="empty-state">Zadne znamky</div>
+          <% } %>
+        </div>
+
+        <!-- Events Card -->
+        <div class="card events-card">
+          <div class="card-header-row">
+            <h2 class="card-title">Udalosti</h2>
+            <a href="/udalosti" class="card-link">Vsechny</a>
+          </div>
+          <% if (events && events.length > 0) { %>
+            <% events.forEach(function(ev) { %>
+              <% const d = new Date(ev.event_date + 'T00:00:00'); %>
+              <div class="event-item">
+                <div class="event-date-badge">
+                  <div class="event-date-day"><%= d.getDate() %></div>
+                  <div class="event-date-month"><%= d.toLocaleDateString('cs-CZ', {month:'short'}) %></div>
+                </div>
+                <div class="event-info">
+                  <div class="event-title"><%= ev.title %></div>
+                  <div class="event-meta">
+                    <% if (ev.event_time) { %><%= ev.event_time %><% } %>
+                    <% if (ev.location) { %>&nbsp; <%= ev.location %><% } %>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          <% } else { %>
+            <div class="no-events">Nejsou napanovane zadne udalosti</div>
+          <% } %>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

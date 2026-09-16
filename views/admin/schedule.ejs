@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head><%- include('../partials/layout-head', { pageTitle: 'Editor rozvrhu' }) %></head>
+<body>
+<div class="app-wrapper">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <div class="content-area">
+
+      <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+      <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+      <div class="page-header">
+        <h1 class="page-title">Editor rozvrhu - <%= selectedClass %></h1>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <% classes.forEach(function(c) { %>
+            <a href="/admin/rozvrh?class=<%= c %>"
+               class="btn <%= selectedClass === c ? 'btn-primary' : 'btn-secondary' %> btn-sm"><%= c %></a>
+          <% }); %>
+        </div>
+      </div>
+
+      <!-- Add slot form -->
+      <div class="card" style="margin-bottom:16px;padding:14px">
+        <form method="POST" action="/admin/rozvrh/add" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+          <input type="hidden" name="class_name" value="<%= selectedClass %>">
+          <div class="form-group" style="margin:0;flex:2;min-width:160px">
+            <label class="form-label">Predmet</label>
+            <select class="form-control" name="subject_id" required>
+              <option value="">-- Vyberte --</option>
+              <% subjects.forEach(function(s) { %>
+                <option value="<%= s.id %>"><%= s.name %> (<%= s.short_name %>)<% if(s.teacher_name){%> - <%=s.teacher_name%><% }%></option>
+              <% }); %>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;flex:1;min-width:120px">
+            <label class="form-label">Den</label>
+            <select class="form-control" name="day_of_week" required>
+              <option value="0">Pondeli</option>
+              <option value="1">Utery</option>
+              <option value="2">Streda</option>
+              <option value="3">Ctvrtek</option>
+              <option value="4">Patek</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;flex:1;min-width:100px">
+            <label class="form-label">Hodina</label>
+            <select class="form-control" name="period" required>
+              <% for(let p=1;p<=8;p++) { %><option value="<%= p %>"><%= p %>. (<%= periodTimes[p] %>)</option><% } %>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" style="flex-shrink:0">Pridat hodinu</button>
+        </form>
+      </div>
+
+      <!-- Schedule grid -->
+      <div class="card">
+        <div class="schedule-grid">
+          <table class="schedule-table">
+            <thead>
+              <tr>
+                <th style="width:70px">Hodina</th>
+                <% days.forEach(function(d) { %><th><%= d %></th><% }); %>
+              </tr>
+            </thead>
+            <tbody>
+              <% for (let p = 1; p <= 8; p++) { %>
+                <tr>
+                  <td class="period-cell">
+                    <strong><%= p %>.</strong>
+                    <span class="period-times"><%= periodTimes[p] %></span>
+                  </td>
+                  <% for (let d = 0; d < 5; d++) { %>
+                    <td>
+                      <% const cell = grid[d][p]; %>
+                      <% if (cell) { %>
+                        <div class="schedule-cell" style="display:flex;flex-direction:column;gap:2px">
+                          <strong><%= cell.short_name %></strong>
+                          <span style="font-size:10px"><%= cell.room %></span>
+                          <form method="POST" action="/admin/rozvrh/<%= cell.id %>/delete" style="margin-top:2px" onsubmit="return confirm('Smazat hodinu?')">
+                            <button type="submit" style="font-size:10px;padding:1px 6px;background:#dc2626;color:white;border:none;border-radius:4px;cursor:pointer">X</button>
+                          </form>
+                        </div>
+                      <% } else { %>
+                        <div style="height:60px;opacity:0.3;font-size:10px;color:var(--text-muted);display:flex;align-items:center;justify-content:center">-</div>
+                      <% } %>
+                    </td>
+                  <% } %>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

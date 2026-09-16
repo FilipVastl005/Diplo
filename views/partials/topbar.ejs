@@ -1,0 +1,22 @@
+<header class="topbar">
+  <% if (typeof todaySubjects !== 'undefined' && todaySubjects.length > 0) { %>
+    <% todaySubjects.forEach(function(s) { %>
+      <a href="/rozvrh" class="subject-pill">
+        <span class="pill-name"><%= s.short_name %></span>
+        <span class="pill-meta">
+          <%= s.teacher_name || s.class_name || '' %>
+          <% if (s.room) { %>&nbsp;&nbsp;<%= s.room %><% } %>
+        </span>
+      </a>
+    <% }); %>
+  <% } else { %>
+    <span class="topbar-empty">
+      <% const dow = new Date().getDay(); %>
+      <% if (dow === 0 || dow === 6) { %>
+        Dnes neni vyucovani (vikend)
+      <% } else { %>
+        Dnes zadne hodiny
+      <% } %>
+    </span>
+  <% } %>
+</header>

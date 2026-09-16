@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head><%- include('partials/layout-head', { pageTitle: 'Chat' }) %></head>
+<body>
+<div class="app-wrapper">
+  <%- include('partials/sidebar') %>
+  <div class="main-content">
+    <%- include('partials/topbar') %>
+    <div class="content-area" style="padding-bottom:0;display:flex;flex-direction:column;height:calc(100vh - 72px)">
+
+      <div class="page-header" style="margin-bottom:12px;flex-shrink:0">
+        <h1 class="page-title">Chat</h1>
+      </div>
+
+      <div class="chat-container" style="flex:1;min-height:0">
+
+        <!-- Room list -->
+        <div class="card chat-rooms">
+          <h3 style="font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Mistnosti</h3>
+          <% availableRooms.forEach(function(r) { %>
+            <a href="/chat?room=<%= encodeURIComponent(r) %>"
+               class="chat-room-item <%= r === room ? 'active' : '' %>">
+              <%= r === 'general' ? 'Obecne' : 'Trida ' + r %>
+            </a>
+          <% }); %>
+        </div>
+
+        <!-- Messages -->
+        <div class="card chat-main" style="min-height:0">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--card-border);font-weight:600;font-size:14px;flex-shrink:0">
+            <%= room === 'general' ? 'Obecna mistnost' : 'Trida ' + room %>
+          </div>
+          <div class="chat-messages" id="chatMessages">
+            <% messages.forEach(function(msg) { %>
+              <% const isMe = msg.sender_id === user.id; %>
+              <div class="chat-message <%= isMe ? 'chat-mine' : '' %>">
+                <div class="chat-avatar" style="background:<%= msg.avatar_color %>">
+                  <%= msg.sender_name.split(' ').map(n => n[0]).join('').substring(0,2) %>
+                </div>
+                <div class="chat-bubble">
+                  <% if (!isMe) { %><div class="chat-sender"><%= msg.sender_name %></div><% } %>
+                  <div class="chat-text"><%= msg.content %></div>
+                  <div class="chat-time"><%= new Date(msg.created_at).toLocaleString('cs-CZ',{hour:'2-digit',minute:'2-digit'}) %></div>
+                </div>
+              </div>
+            <% }); %>
+            <% if (messages.length === 0) { %>
+              <div class="empty-state" style="margin:auto">Zatim zadne zpravy. Bud prvni!</div>
+            <% } %>
+          </div>
+          <form method="POST" action="/chat/send" class="chat-input-area" id="chatForm">
+            <input type="hidden" name="room" value="<%= room %>">
+            <input class="chat-input" type="text" name="content" id="chatInput"
+                   placeholder="Napiste zpravu..." maxlength="1000" autocomplete="off" required>
+            <button type="submit" class="btn btn-primary">Odeslat</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  // Scroll to bottom on load
+  const msgContainer = document.getElementById('chatMessages');
+  msgContainer.scrollTop = msgContainer.scrollHeight;
+
+  // Auto-poll for new messages
+  let lastId = <%= messages.length > 0 ? messages[messages.length-1].id : 0 %>;
+  const currentRoom = '<%= room %>';
+  const currentUserId = <%= user.id %>;
+
+  function pollMessages() {
+    fetch(`/chat/api/messages?room=${encodeURIComponent(currentRoom)}&after=${lastId}`)
+      .then(r => r.json())
+      .then(msgs => {
+        if (msgs.length === 0) return;
+        msgs.forEach(msg => {
+          lastId = msg.id;
+          const isMe = msg.sender_id === currentUserId;
+          const initials = msg.sender_name.split(' ').map(n => n[0]).join('').substring(0, 2);
+          const time = new Date(msg.created_at).toLocaleTimeString('cs-CZ', {hour:'2-digit',minute:'2-digit'});
+          const div = document.createElement('div');
+          div.className = 'chat-message' + (isMe ? ' chat-mine' : '');
+          div.innerHTML = `
+            <div class="chat-avatar" style="background:${msg.avatar_color}">${initials}</div>
+            <div class="chat-bubble">
+              ${!isMe ? `<div class="chat-sender">${msg.sender_name}</div>` : ''}
+              <div class="chat-text">${msg.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+              <div class="chat-time">${time}</div>
+            </div>`;
+          msgContainer.appendChild(div);
+        });
+        msgContainer.scrollTop = msgContainer.scrollHeight;
+      })
+      .catch(() => {});
+  }
+
+  setInterval(pollMessages, 3000);
+</script>
+</body>
+</html>

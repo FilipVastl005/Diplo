@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head><%- include('partials/layout-head', { pageTitle: 'Notifikace' }) %></head>
+<body>
+<div class="app-wrapper">
+  <%- include('partials/sidebar') %>
+  <div class="main-content">
+    <%- include('partials/topbar') %>
+    <div class="content-area">
+
+      <% if (success) { %><div class="alert alert-success"><%= success %></div><% } %>
+      <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+
+      <div style="display:grid;grid-template-columns:<%= (user.role !== 'student') ? '1fr 360px' : '1fr' %>;gap:20px;align-items:start">
+
+        <!-- Notification list -->
+        <div>
+          <div class="page-header">
+            <h1 class="page-title">Notifikace</h1>
+          </div>
+          <% if (notifications && notifications.length > 0) { %>
+            <% notifications.forEach(function(n) { %>
+              <div class="card" style="margin-bottom:12px">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+                  <div style="flex:1">
+                    <div class="notif-author"><%= n.teacher_name || 'System' %></div>
+                    <% if (n.target_class) { %><span class="badge badge-student" style="margin-bottom:6px">Trida: <%= n.target_class %></span><% } %>
+                    <div class="notif-content" style="margin-top:6px"><%= n.content %></div>
+                    <div class="notif-date"><%= new Date(n.created_at).toLocaleString('cs-CZ') %></div>
+                  </div>
+                  <% if (user.role === 'admin' || (user.role === 'teacher' && n.teacher_id === user.id)) { %>
+                    <form method="POST" action="/notifikace/<%= n.id %>/delete" onsubmit="return confirm('Smazat notifikaci?')">
+                      <button type="submit" class="btn btn-danger btn-sm">Smazat</button>
+                    </form>
+                  <% } %>
+                </div>
+              </div>
+            <% }); %>
+
+            <!-- Pagination -->
+            <% if (totalPages > 1) { %>
+              <div style="display:flex;gap:8px;margin-top:16px;align-items:center">
+                <% if (currentPage > 1) { %><a href="?page=<%= currentPage-1 %>" class="btn btn-secondary btn-sm">Predchozi</a><% } %>
+                <span style="font-size:13px;color:var(--text-muted)">Strana <%= currentPage %> z <%= totalPages %></span>
+                <% if (currentPage < totalPages) { %><a href="?page=<%= currentPage+1 %>" class="btn btn-secondary btn-sm">Dalsi</a><% } %>
+              </div>
+            <% } %>
+          <% } else { %>
+            <div class="card"><div class="empty-state">Zadne notifikace k zobrazeni.</div></div>
+          <% } %>
+        </div>
+
+        <!-- Post form (teacher/admin) -->
+        <% if (user.role !== 'student') { %>
+        <div class="card" style="position:sticky;top:24px">
+          <h2 class="card-title" style="font-size:17px;margin-bottom:14px">Nova notifikace</h2>
+          <form method="POST" action="/notifikace">
+            <div class="form-group">
+              <label class="form-label">Zprava</label>
+              <textarea class="form-control" name="content" rows="5" maxlength="2000" placeholder="Napiste notifikaci pro studenty..." required></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Trida (volitelne)</label>
+              <select class="form-control" name="target_class">
+                <option value="">Vsechny tridy</option>
+                <% classes.forEach(function(c) { %>
+                  <option value="<%= c.class_name %>"><%= c.class_name %></option>
+                <% }); %>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Odeslat</button>
+          </form>
+        </div>
+        <% } %>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head><%- include('partials/layout-head', { pageTitle: 'Rozvrh' }) %></head>
+<body>
+<div class="app-wrapper">
+  <%- include('partials/sidebar') %>
+  <div class="main-content">
+    <%- include('partials/topbar') %>
+    <div class="content-area">
+
+      <div class="page-header">
+        <h1 class="page-title">
+          Rozvrh
+          <% if (selectedClass) { %><span style="font-size:16px;font-weight:500;color:var(--text-muted)"> - <%= selectedClass %></span><% } %>
+        </h1>
+        <!-- Class selector (admin only) -->
+        <% if (user.role === 'admin' && classes.length > 0) { %>
+          <form method="GET" action="/rozvrh" style="display:flex;gap:8px;align-items:center">
+            <select class="form-control" name="class" onchange="this.form.submit()" style="width:auto">
+              <option value="">-- Vybrat tridu --</option>
+              <% classes.forEach(function(c) { %>
+                <option value="<%= c %>" <%= selectedClass === c ? 'selected' : '' %>><%= c %></option>
+              <% }); %>
+            </select>
+          </form>
+        <% } %>
+      </div>
+
+      <div class="card">
+        <div class="schedule-grid">
+          <table class="schedule-table">
+            <thead>
+              <tr>
+                <th style="width:60px">Hodina</th>
+                <% days.forEach(function(d) { %><th><%= d %></th><% }); %>
+              </tr>
+            </thead>
+            <tbody>
+              <% for (let p = 1; p <= 8; p++) { %>
+                <tr>
+                  <td class="period-cell">
+                    <strong><%= p %>.</strong>
+                    <span class="period-times"><%= periodTimes[p] %></span>
+                  </td>
+                  <% for (let d = 0; d < 5; d++) { %>
+                    <td>
+                      <% const cells = grid[d][p]; %>
+                      <% if (cells) { %>
+                        <% const cellArr = Array.isArray(cells) ? cells : [cells]; %>
+                        <% cellArr.forEach(function(cell) { %>
+                          <div class="schedule-cell">
+                            <div style="font-size:14px;font-weight:700"><%= cell.short_name %></div>
+                            <div style="font-size:10px;color:var(--purple-600)"><%= cell.room %></div>
+                            <% if (cell.teacher_name) { %><div style="font-size:10px;color:var(--text-muted)"><%= cell.teacher_name.split(' ')[1] || cell.teacher_name %></div><% } %>
+                            <% if (cell.class_name && user.role === 'teacher') { %><div style="font-size:10px;color:var(--text-muted)"><%= cell.class_name %></div><% } %>
+                          </div>
+                        <% }); %>
+                      <% } %>
+                    </td>
+                  <% } %>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <% if (user.role === 'admin') { %>
+        <div style="margin-top:12px">
+          <a href="/admin/rozvrh<%= selectedClass ? '?class='+selectedClass : '' %>" class="btn btn-secondary">Upravit rozvrh</a>
+        </div>
+      <% } %>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>
