@@ -62,7 +62,7 @@ function getTodaySubjects(user, db) {
   return [];
 }
 
-\n  const db = getDb(req.tenant);
+  const db = getDb(req.tenant);
     const user = req.user;
   const todaySubjects = getTodaySubjects(user);
 
