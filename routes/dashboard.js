@@ -62,7 +62,7 @@ function getTodaySubjects(user, db) {
   return [];
 }
 
-  const db = getDb(req.tenant);
+{  const db = getDb(req.tenant);
     const user = req.user;
   const todaySubjects = getTodaySubjects(user);
 
@@ -118,6 +118,6 @@ function getTodaySubjects(user, db) {
   `).all();
 
   res.render('dashboard', { user, todaySubjects, notifications, grades, events, page: 'dashboard' });
-});
+};
 
 module.exports = router;
